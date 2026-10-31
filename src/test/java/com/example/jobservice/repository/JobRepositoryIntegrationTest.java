@@ -88,7 +88,7 @@ class JobRepositoryIntegrationTest {
 
 
     @Test void realWorkerExecutesAnEndToEndJob() throws Exception {
-        Job job = jobs.submit(sumRequest(0, null), null);
+        Job job = jobs.submit(sumRequest(0, null));
         var poller = new com.example.jobservice.worker.WorkerPoller(jobs, handlers, meters, 1, 15);
         poller.start();
         try {
@@ -107,7 +107,7 @@ class JobRepositoryIntegrationTest {
     }
 
     @Test void submitClaimAndCompleteWithExecutionHistory() throws Exception {
-        Job job = jobs.submit(sumRequest(2, null), null);
+        Job job = jobs.submit(sumRequest(2, null));
         assertEquals("QUEUED", job.status());
         ClaimedJob claim = jobs.claim("worker-A", 15).orElseThrow();
         assertEquals(job.id(), claim.id());
@@ -122,7 +122,7 @@ class JobRepositoryIntegrationTest {
     }
 
     @Test void failedAttemptRetriesThenDeadLetters() throws Exception {
-        Job job = jobs.submit(sumRequest(1, null), null);
+        Job job = jobs.submit(sumRequest(1, null));
         ClaimedJob first = jobs.claim("w1", 15).orElseThrow();
         assertTrue(jobs.fail(first, "FAILED", "Transient error"));
         assertEquals("FAILED", jobs.getJob(job.id()).status());
@@ -137,7 +137,7 @@ class JobRepositoryIntegrationTest {
     }
 
     @Test void recoverExpiredLeaseAndFenceStaleWorker() throws Exception {
-        Job job = jobs.submit(sumRequest(1, null), null);
+        Job job = jobs.submit(sumRequest(1, null));
         ClaimedJob old = jobs.claim("crashed", 15).orElseThrow();
         jdbc.update("UPDATE jobs SET lease_until=now()-interval '1 second' WHERE id=?", job.id());
         assertEquals(1, jobs.recoverExpired(10));
@@ -150,7 +150,7 @@ class JobRepositoryIntegrationTest {
     }
 
     @Test void delayedJobCannotBeClaimedEarly() throws Exception {
-        Job job = jobs.submit(sumRequest(0, Instant.now().plusSeconds(3600)), null);
+        Job job = jobs.submit(sumRequest(0, Instant.now().plusSeconds(3600)));
         assertTrue(jobs.claim("w1", 15).isEmpty());
         assertEquals("QUEUED", jobs.getJob(job.id()).status());
         jdbc.update("UPDATE jobs SET available_at=now()-interval '1 second' WHERE id=?", job.id());
@@ -158,7 +158,7 @@ class JobRepositoryIntegrationTest {
     }
 
     @Test void drainAndCancellation() throws Exception {
-        Job job = jobs.submit(sumRequest(0, null), null);
+        Job job = jobs.submit(sumRequest(0, null));
         jobs.drain(true);
         assertTrue(jobs.claim("w", 15).isEmpty());
         assertTrue(jobs.cancel(job.id()));
@@ -168,7 +168,7 @@ class JobRepositoryIntegrationTest {
     }
 
     @Test void onlyOneWorkerCanClaimTheSameRow() throws Exception {
-        Job job = jobs.submit(sumRequest(0, null), null);
+        Job job = jobs.submit(sumRequest(0, null));
         ExecutorService pool = Executors.newFixedThreadPool(2);
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch go = new CountDownLatch(1);
@@ -189,13 +189,6 @@ class JobRepositoryIntegrationTest {
         } finally { pool.shutdownNow(); }
     }
 
-    @Test void idempotencyKeyIsReusedAndConflictsOnChangedPayload() throws Exception {
-        Job first = jobs.submit(sumRequest(0, null), "client-123");
-        assertEquals(first.id(), jobs.submit(sumRequest(0, null), "client-123").id());
-        var other = new JobRequest("sum", mapper.readTree("{\"numbers\":[1]}"),10,0,30,null);
-        assertThrows(org.springframework.web.server.ResponseStatusException.class,
-                () -> jobs.submit(other, "client-123"));
-    }
 
     @Test void recurringScheduleMaterializesOnceAndAdvances() throws Exception {
         var req = new ScheduleRequest("sum", mapper.readTree("{\"numbers\":[1]}"),
@@ -226,8 +219,8 @@ class JobRepositoryIntegrationTest {
 
 
     @Test void cancelPendingDoesNotCancelRunningJobs() throws Exception {
-        Job running = jobs.submit(sumRequest(0, null), null);
-        Job queued = jobs.submit(sumRequest(0, Instant.now().plusSeconds(3600)), null);
+        Job running = jobs.submit(sumRequest(0, null));
+        Job queued = jobs.submit(sumRequest(0, Instant.now().plusSeconds(3600)));
         ClaimedJob active = jobs.claim("w1", 15).orElseThrow();
         assertEquals(running.id(), active.id());
         assertEquals(1, jobs.cancelPending());
@@ -268,10 +261,10 @@ class JobRepositoryIntegrationTest {
 
     @Test void higherPriorityRunsFirstWithoutClaimingFutureWork() throws Exception {
         var payload = mapper.readTree("{\"numbers\":[1]}");
-        Job low = jobs.submit(new JobRequest("sum", payload, -10, 0, 30, null), null);
-        Job high = jobs.submit(new JobRequest("sum", payload, 20, 0, 30, null), null);
+        Job low = jobs.submit(new JobRequest("sum", payload, -10, 0, 30, null));
+        Job high = jobs.submit(new JobRequest("sum", payload, 20, 0, 30, null));
         Job future = jobs.submit(new JobRequest("sum", payload, 100, 0, 30,
-                Instant.now().plusSeconds(3600)), null);
+                Instant.now().plusSeconds(3600)));
 
         assertEquals(high.id(), jobs.claim("priority-worker", 15).orElseThrow().id());
         assertEquals(low.id(), jobs.claim("priority-worker", 15).orElseThrow().id());
@@ -419,7 +412,7 @@ class JobRepositoryIntegrationTest {
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
             for (int iteration = 0; iteration < 8; iteration++) {
-                Job submitted = jobs.submit(sumRequest(0, null), null);
+                Job submitted = jobs.submit(sumRequest(0, null));
                 ClaimedJob claim = jobs.claim("finishing-worker", 15).orElseThrow();
                 jdbc.update("UPDATE jobs SET lease_until=now()-interval '1 second' WHERE id=?", submitted.id());
                 CountDownLatch ready = new CountDownLatch(2);
@@ -451,7 +444,7 @@ class JobRepositoryIntegrationTest {
     }
 
     @Test void crashAfterClaimWithNoRetriesRecordsUnknownOutcomeWithoutExecutingHandler() throws Exception {
-        Job job = jobs.submit(sumRequest(0, null), null);
+        Job job = jobs.submit(sumRequest(0, null));
         ClaimedJob claim = jobs.claim("crashed-before-dispatch", 15).orElseThrow();
         // No handler is invoked: a committed claim itself consumes the finite attempt budget.
         jdbc.update("UPDATE jobs SET lease_until=now()-interval '1 second' WHERE id=?", job.id());
@@ -468,14 +461,14 @@ class JobRepositoryIntegrationTest {
     }
 
     @Test void queueHttpControlsPauseResumeAndCancelOnlyPendingJobs() throws Exception {
-        Job runningJob = jobs.submit(sumRequest(1, null), null);
+        Job runningJob = jobs.submit(sumRequest(1, null));
         ClaimedJob running = jobs.claim("active-worker", 15).orElseThrow();
-        Job retryJob = jobs.submit(sumRequest(1, null), null);
+        Job retryJob = jobs.submit(sumRequest(1, null));
         ClaimedJob retry = jobs.claim("retry-worker", 15).orElseThrow();
         assertTrue(jobs.fail(retry, "FAILED", "retry me"));
         jdbc.update("UPDATE jobs SET available_at=now()+interval '1 hour' WHERE id=?", retryJob.id());
-        Job ready = jobs.submit(sumRequest(0, null), null);
-        Job delayed = jobs.submit(sumRequest(0, Instant.now().plusSeconds(3600)), null);
+        Job ready = jobs.submit(sumRequest(0, null));
+        Job delayed = jobs.submit(sumRequest(0, Instant.now().plusSeconds(3600)));
 
         mvc.perform(post("/queue/drain")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.draining").value(true));
@@ -502,7 +495,7 @@ class JobRepositoryIntegrationTest {
     }
 
     @Test void apiKeyProtectsJobAndMetricsRoutesWhileHealthRemainsAvailable() throws Exception {
-        Job job = jobs.submit(sumRequest(0, null), null);
+        Job job = jobs.submit(sumRequest(0, null));
         MockMvc protectedMvc = MockMvcBuilders.webAppContextSetup(webContext)
                 .addFilters(new ApiKeyFilter("integration-test-secret")).build();
         for (String path : List.of("/jobs/" + job.id(), "/queue/depth", "/handlers",
@@ -531,9 +524,5 @@ class JobRepositoryIntegrationTest {
         mvc.perform(post("/schedules").contentType(MediaType.APPLICATION_JSON).content("""
                 {"type":"sum","payload":{"numbers":[1]},"cronExpression":"invalid","timezone":"UTC"}
                 """)).andExpect(status().isBadRequest());
-        mvc.perform(post("/jobs").contentType(MediaType.APPLICATION_JSON)
-                .header("Idempotency-Key", "x".repeat(161))
-                .content("{\"type\":\"sum\",\"payload\":{\"numbers\":[1]}}"))
-                .andExpect(status().isBadRequest());
     }
 }

@@ -72,7 +72,7 @@ erDiagram
 
 ## Atomicity and delivery guarantees
 
-1. **Submission:** PostgreSQL commits each accepted job before the HTTP 202 response. An `Idempotency-Key` avoids duplicate logical job creation on client retries (same key must imply same job request).
+1. **Submission:** PostgreSQL commits each accepted job before the HTTP 202 response.
 2. **Claim:** Within one short transaction, use `FOR UPDATE SKIP LOCKED`, mark the job `RUNNING`, allocate a lease token, increment the attempt, and insert the attempt-history row. The database lock is released **before** running the handler.
 3. **Completion:** Lock the job row and accept result only if the active lease token and execution ID still match. Store result and complete the attempt in one transaction.
 4. **Failure:** Mark attempt `FAILED` / `TIMED_OUT`; set the job `FAILED` with exponential backoff or dead-letter it, atomically.

@@ -70,7 +70,7 @@ Additional handlers implement `JobHandler` and are annotated with `@Component`; 
 | GET | `/actuator/health` | Health status |
 | GET | `/actuator/prometheus` | Prometheus scrape endpoint |
 
-`POST /jobs` accepts `type`, `payload`, optional `priority` (-100 to 100), `maxRetries` (0 to 100), `timeoutSeconds` (1 to 86400), and optional future `runAt` in ISO-8601 UTC/offset form. `Idempotency-Key` is an optional header. The same key and same parameters return the same logical job; different parameters return HTTP 409.
+`POST /jobs` accepts `type`, `payload`, optional `priority` (-100 to 100), `maxRetries` (0 to 100), `timeoutSeconds` (1 to 86400), and optional future `runAt` in ISO-8601 UTC/offset form.
 
 **Retry semantics:** `maxRetries = 3` means up to 4 total attempts (1 original + 3 retries). On failed attempts, the next attempt waits `min(2^attemptNumber, 60)` seconds. Status `FAILED` means a failed attempt with retry pending; `DEAD_LETTERED` means the retry budget is exhausted. The most recent failure is recorded on `jobs`, and each attempt is preserved in `job_executions`.
 

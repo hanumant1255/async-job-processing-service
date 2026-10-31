@@ -20,10 +20,9 @@ public class JobController {
     }
 
     @PostMapping("/jobs")
-    public ResponseEntity<Job> submit(@Valid @RequestBody JobRequest request,
-                                        @RequestHeader(value="Idempotency-Key",required=false) String idempotencyKey) {
+    public ResponseEntity<Job> submit(@Valid @RequestBody JobRequest request) {
         requireSupported(request.type());
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(repository.submit(request, idempotencyKey));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(repository.submit(request));
     }
 
     @GetMapping("/jobs/{id}")

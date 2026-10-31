@@ -6,7 +6,6 @@ GET {{host}}/actuator/health
 ### Submit job
 POST {{host}}/jobs
 Content-Type: application/json
-Idempotency-Key: example-sum-001
 
 {"type":"sum","payload":{"numbers":[10,20,30]},"priority":5,"maxRetries":3,"timeoutSeconds":10}
 

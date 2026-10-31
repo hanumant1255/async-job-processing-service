@@ -62,31 +62,16 @@ public class JobRepository {
         return result.getFirst();
     }
 
-    public Job submit(JobRequest request, String idempotencyKey) {
-        if (idempotencyKey != null && (idempotencyKey.isBlank() || idempotencyKey.length() > 160))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Idempotency-Key");
+    public Job submit(JobRequest request) {
         return Objects.requireNonNull(tx.execute(status -> {
             UUID id = UUID.randomUUID();
-            List<UUID> inserted = jdbc.query("""
-                    INSERT INTO jobs(id,type,payload,status,priority,max_retries,timeout_seconds,available_at,scheduled_for,idempotency_key)
-                    VALUES (?, ?, ?::jsonb, 'QUEUED', ?, ?, ?, COALESCE(?,now()), ?, ?)
-                    ON CONFLICT (idempotency_key) DO NOTHING RETURNING id
-                    """, (rs, n) -> (UUID) rs.getObject(1), id, request.type(), stringify(request.payload()),
+            jdbc.update("""
+                    INSERT INTO jobs(id,type,payload,status,priority,max_retries,timeout_seconds,available_at,scheduled_for)
+                    VALUES (?, ?, ?::jsonb, 'QUEUED', ?, ?, ?, COALESCE(?,now()), ?)
+                    """, id, request.type(), stringify(request.payload()),
                     request.effectivePriority(), request.effectiveMaxRetries(), request.effectiveTimeoutSeconds(),
                     request.runAt() == null ? null : java.sql.Timestamp.from(request.runAt()),
-                    request.runAt() == null ? null : java.sql.Timestamp.from(request.runAt()), idempotencyKey);
-            if (inserted.isEmpty()) {
-                List<Job> found = jdbc.query("SELECT * FROM jobs WHERE idempotency_key=?", this::mapJob, idempotencyKey);
-                if (found.isEmpty()) throw new IllegalStateException("Idempotency key conflict without row");
-                Job previous = found.getFirst();
-                if (!previous.type().equals(request.type()) || !previous.payload().equals(request.payload()) ||
-                    previous.priority() != request.effectivePriority() ||
-                    previous.maxRetries() != request.effectiveMaxRetries() ||
-                    previous.timeoutSeconds() != request.effectiveTimeoutSeconds() ||
-                    !Objects.equals(previous.scheduledFor(), request.runAt()))
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Idempotency-Key reused with different request");
-                return previous;
-            }
+                    request.runAt() == null ? null : java.sql.Timestamp.from(request.runAt()));
             return getJob(id);
         }));
     }

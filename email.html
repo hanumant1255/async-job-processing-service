@@ -1,0 +1,37 @@
+<html>
+<body style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.6; color: #333333; max-width: 650px;">
+
+<p>Hi [Name],</p>
+
+<p>I've completed the Async Job Processing Service and deployed it live on DigitalOcean. All requirements from the brief are implemented and tested.</p>
+
+<p><strong>Repository:</strong> <a href="https://github.com/hanumant1255/async-job-processing-service" style="color: #1a73e8;">https://github.com/hanumant1255/async-job-processing-service</a><br>
+<strong>Live deployment:</strong> <a href="https://async-job-service-xwaq9.ondigitalocean.app" style="color: #1a73e8;">https://async-job-service-xwaq9.ondigitalocean.app</a></p>
+
+<p><strong>Implementation summary</strong></p>
+
+<ul style="padding-left: 20px;">
+<li><strong>Async job submission</strong> — POST /jobs returns immediately (HTTP 202) with a job ID. Supports priority, configurable retries, and per-attempt timeout.</li>
+<li><strong>Worker execution</strong> — Workers claim jobs using PostgreSQL SKIP LOCKED for safe concurrent access. Failed jobs retry with exponential backoff; exhausted jobs move to a dead-letter queue.</li>
+<li><strong>Full lifecycle visibility</strong> — Job status, attempt count, result payload, and per-attempt execution history are all queryable via REST.</li>
+<li><strong>Queue controls</strong> — Queue depth endpoint, drain/resume, and cancel-pending for operational control.</li>
+<li><strong>Cron scheduling</strong> — Recurring jobs via six-field cron expressions with timezone support, plus one-time delayed execution.</li>
+<li><strong>Observability</strong> — Prometheus metrics for queue depth, worker utilization, latency percentiles (p50/p95), and dead-letter rate.</li>
+<li><strong>Testing</strong> — 33 tests (unit + integration with Testcontainers/PostgreSQL) covering concurrent claiming, retry flows, lease recovery, scheduling, and more.</li>
+<li><strong>CI/CD</strong> — GitHub Actions pipeline runs the full test suite on every push — currently passing.</li>
+<li><strong>Architecture</strong> — Diagrams, data model, and at-least-once delivery semantics documented in docs/architecture.md.</li>
+</ul>
+
+<p><strong>Deployment</strong></p>
+
+<p>The service runs on DigitalOcean App Platform as three independently scalable components (API, Worker, Scheduler) backed by managed PostgreSQL. Workers scale independently without affecting the API tier.</p>
+
+<p><strong>Tech stack:</strong> Java 21, Spring Boot 3.5, PostgreSQL 16, Docker, GitHub Actions</p>
+
+<p>Let me know if you need any clarification.</p>
+
+<p>Best regards,<br>
+Hanumant</p>
+
+</body>
+</html>

@@ -31,7 +31,6 @@ CREATE TABLE jobs (
     current_execution_id UUID,
     result JSONB,
     last_error TEXT,
-    idempotency_key VARCHAR(160) UNIQUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE(schedule_id, scheduled_for)
