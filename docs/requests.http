@@ -1,0 +1,47 @@
+@host = http://localhost:8080
+
+### Health
+GET {{host}}/actuator/health
+
+### Submit job
+POST {{host}}/jobs
+Content-Type: application/json
+Idempotency-Key: example-sum-001
+
+{"type":"sum","payload":{"numbers":[10,20,30]},"priority":5,"maxRetries":3,"timeoutSeconds":10}
+
+### Retry demo; fails twice, succeeds third attempt
+POST {{host}}/jobs
+Content-Type: application/json
+
+{"type":"flaky","payload":{"failUntilAttempt":2},"maxRetries":3,"timeoutSeconds":10}
+
+### Timeout demo
+POST {{host}}/jobs
+Content-Type: application/json
+
+{"type":"sleep","payload":{"millis":10000},"maxRetries":1,"timeoutSeconds":1}
+
+### Delayed (use a future ISO-8601 instant)
+POST {{host}}/jobs
+Content-Type: application/json
+
+{"type":"sum","payload":{"numbers":[1,2]},"runAt":"2030-01-01T10:00:00Z"}
+
+### Recurring every minute (six-field Spring cron)
+POST {{host}}/schedules
+Content-Type: application/json
+
+{"type":"sum","payload":{"numbers":[3,4]},"cronExpression":"0 * * * * *","timezone":"Asia/Kolkata","maxRetries":2,"timeoutSeconds":30}
+
+### Queue depth
+GET {{host}}/queue/depth
+
+### Stop new claims
+POST {{host}}/queue/drain
+
+### Resume claims
+POST {{host}}/queue/resume
+
+### Metrics
+GET {{host}}/actuator/prometheus

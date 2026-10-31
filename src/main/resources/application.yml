@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: async-job-service
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/jobs}
+    username: ${DATABASE_USER:jobs}
+    password: ${DATABASE_PASSWORD:jobs}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+  task:
+    scheduling:
+      pool:
+        size: 4
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    distribution:
+      percentiles-histogram:
+        jobs.execution.duration: true
+      percentiles:
+        jobs.execution.duration: 0.5,0.95
+server:
+  port: ${PORT:8080}
+jobs:
+  api:
+    enabled: ${API_ENABLED:true}
+  worker:
+    enabled: ${WORKER_ENABLED:true}
+    concurrency: ${WORKER_CONCURRENCY:4}
+    poll-ms: ${WORKER_POLL_MS:250}
+    recovery-ms: ${WORKER_RECOVERY_MS:2000}
+    lease-grace-seconds: ${WORKER_LEASE_GRACE_SECONDS:15}
+  scheduler:
+    enabled: ${SCHEDULER_ENABLED:true}
+    poll-ms: ${SCHEDULER_POLL_MS:1000}
+    batch-size: ${SCHEDULER_BATCH_SIZE:100}
+logging:
+  level:
+    com.example.jobservice: INFO
