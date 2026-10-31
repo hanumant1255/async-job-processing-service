@@ -159,5 +159,5 @@ Scale worker replicas and tune per-instance concurrency to match handler duratio
 - The cron extension materializes due occurrences rather than reserving worker capacity. Start time is best effort; it never promises strict scheduled execution deadlines.
 - The service uses two executors per worker to enforce per-attempt timeout. Java interruption is cooperative; the handler pool is bounded to reduce risk from stuck handlers.
 - Spring Actuator exposes Prometheus metrics; run a Prometheus collector or managed monitoring system for retention and dashboards.
-- App Platform infrastructure has **not** been deployed or smoke-tested as part of this source package. See [deployment guide](docs/digitalocean.md).
+- The service is deployed on DigitalOcean App Platform. See [deployment guide](docs/digitalocean.md) for setup details.
 
