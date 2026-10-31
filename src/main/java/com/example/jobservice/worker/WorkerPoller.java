@@ -87,7 +87,7 @@ public class WorkerPoller {
         String outcome = "failed";
         Future<JsonNode> task = null;
         try {
-            task = handlerPool.submit(() -> handlers.run(job.type(), job.payload(), job.attemptNumber()));
+            task = handlerPool.submit(() -> handlers.run(job.type(), job.payload(), new JobContext(job.id(), job.executionId(), job.attemptNumber())));
             JsonNode result = task.get(job.timeoutSeconds(), TimeUnit.SECONDS);
             if (jobs.complete(job, result)) outcome = "succeeded";
             else outcome = "stale";

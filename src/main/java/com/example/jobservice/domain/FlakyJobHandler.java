@@ -10,7 +10,8 @@ public class FlakyJobHandler implements JobHandler {
     private final ObjectMapper mapper;
     public FlakyJobHandler(ObjectMapper mapper) { this.mapper = mapper; }
     @Override public String type() { return "flaky"; }
-    @Override public JsonNode execute(JsonNode payload, int attemptNumber) {
+    @Override public JsonNode execute(JsonNode payload, JobContext context) {
+        int attemptNumber = context.attemptNumber();
         int failUntil = payload.path("failUntilAttempt").asInt(1);
         if (failUntil < 0 || failUntil > 100) throw new IllegalArgumentException("invalid failUntilAttempt");
         if (attemptNumber <= failUntil) throw new IllegalStateException("Simulated transient failure on attempt " + attemptNumber);

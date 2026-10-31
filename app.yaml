@@ -1,0 +1,111 @@
+# DigitalOcean App Platform specification
+# Deploy with: doctl apps create-app spec app.yaml
+# Or update:  doctl apps update <app-id> --spec app.yaml
+#
+# Before deploying, replace the placeholder values:
+#   <DATABASE_HOST>     - Your managed PostgreSQL host (e.g., db-xxx.db.ondigitalocean.com)
+#   <DATABASE_PASSWORD> - Your database password
+#   <API_KEY>           - A secret API key for authenticating requests
+#
+# Database setup (run once):
+#   psql "host=<DATABASE_HOST> port=25060 dbname=defaultdb user=doadmin sslmode=require"
+#   CREATE DATABASE jobs;
+
+name: async-job-service
+region: nyc
+
+services:
+  - name: api
+    source_dir: /
+    github:
+      branch: main
+      repo: hanumant1255/async-job-processing-service
+    dockerfile_path: Dockerfile
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /actuator/health
+      initial_delay_seconds: 40
+    envs:
+      - key: API_ENABLED
+        value: "true"
+      - key: WORKER_ENABLED
+        value: "false"
+      - key: SCHEDULER_ENABLED
+        value: "false"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+        value: jdbc:postgresql://<DATABASE_HOST>:25060/jobs?sslmode=require
+      - key: DATABASE_USER
+        scope: RUN_TIME
+        value: doadmin
+      - key: DATABASE_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
+        value: <DATABASE_PASSWORD>
+      - key: API_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: <API_KEY>
+      - key: DB_POOL_SIZE
+        value: "10"
+
+workers:
+  - name: worker
+    source_dir: /
+    github:
+      branch: main
+      repo: hanumant1255/async-job-processing-service
+    dockerfile_path: Dockerfile
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: API_ENABLED
+        value: "false"
+      - key: WORKER_ENABLED
+        value: "true"
+      - key: SCHEDULER_ENABLED
+        value: "false"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+        value: jdbc:postgresql://<DATABASE_HOST>:25060/jobs?sslmode=require
+      - key: DATABASE_USER
+        scope: RUN_TIME
+        value: doadmin
+      - key: DATABASE_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
+        value: <DATABASE_PASSWORD>
+      - key: WORKER_CONCURRENCY
+        value: "4"
+      - key: WORKER_POLL_MS
+        value: "250"
+
+  - name: scheduler
+    source_dir: /
+    github:
+      branch: main
+      repo: hanumant1255/async-job-processing-service
+    dockerfile_path: Dockerfile
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: API_ENABLED
+        value: "false"
+      - key: WORKER_ENABLED
+        value: "false"
+      - key: SCHEDULER_ENABLED
+        value: "true"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+        value: jdbc:postgresql://<DATABASE_HOST>:25060/jobs?sslmode=require
+      - key: DATABASE_USER
+        scope: RUN_TIME
+        value: doadmin
+      - key: DATABASE_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
+        value: <DATABASE_PASSWORD>

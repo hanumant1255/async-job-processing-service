@@ -19,9 +19,9 @@ public class Handlers {
 
     public Set<String> supportedTypes() { return registry.keySet(); }
 
-    public JsonNode run(String type, JsonNode payload, int attemptNumber) throws Exception {
+    public JsonNode run(String type, JsonNode payload, JobContext context) throws Exception {
         JobHandler handler = registry.get(type);
         if (handler == null) throw new IllegalArgumentException("Unsupported handler: " + type);
-        return handler.execute(payload, attemptNumber);
+        return handler.execute(payload, context);
     }
 }

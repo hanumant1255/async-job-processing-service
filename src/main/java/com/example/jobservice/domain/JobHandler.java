@@ -4,5 +4,5 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public interface JobHandler {
     String type();
-    JsonNode execute(JsonNode payload, int attemptNumber) throws Exception;
+    JsonNode execute(JsonNode payload, JobContext context) throws Exception;
 }

@@ -94,8 +94,16 @@ The scheduler creates a **new logical job** for every occurrence. The associated
 
 - [Architecture diagram, schema and reliability semantics](docs/architecture.md)
 - [Operations, scaling, metrics, security and retention](docs/operations.md)
-- [DigitalOcean deployment instructions](docs/digitalocean.md)
+- [DigitalOcean deployment guide](docs/digitalocean.md) (includes step-by-step App Platform setup)
 - [API request examples](docs/requests.http)
+
+## Deployment
+
+The service deploys as three independently scalable components (API, Worker, Scheduler) from a single Docker image. Environment variables control which role each instance runs.
+
+**DigitalOcean App Platform:** Edit `app.yaml` with your database credentials and deploy with `doctl apps create-app spec app.yaml`. See [docs/digitalocean.md](docs/digitalocean.md) for the full guide, including UI-based deployment, cost estimates, and worker scaling demonstrations.
+
+**Local development:** `docker compose up --build -d` starts all components. Scale workers with `docker compose up -d --scale worker=3`.
 
 ### Minimal lifecycle
 

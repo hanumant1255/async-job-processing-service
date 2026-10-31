@@ -10,7 +10,7 @@ public class SumJobHandler implements JobHandler {
     private final ObjectMapper mapper;
     public SumJobHandler(ObjectMapper mapper) { this.mapper = mapper; }
     @Override public String type() { return "sum"; }
-    @Override public JsonNode execute(JsonNode payload, int attemptNumber) {
+    @Override public JsonNode execute(JsonNode payload, JobContext context) {
         JsonNode values = payload.path("numbers");
         if (!values.isArray()) throw new IllegalArgumentException("numbers must be an array");
         long sum = 0;

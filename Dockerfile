@@ -11,4 +11,7 @@ RUN useradd -r -u 10001 jobsvc
 COPY --from=build /app/target/async-job-service-1.0.0.jar app.jar
 USER jobsvc
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# DigitalOcean App Platform uses HTTP health checks configured in the UI.
+# Health endpoint: GET /actuator/health (returns 200 when ready)
+# For local Docker Compose, use: docker compose up --scale worker=3
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

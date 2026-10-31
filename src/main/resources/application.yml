@@ -15,6 +15,13 @@ spring:
     enabled: true
     baseline-on-migrate: false
 management:
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  endpoint:
+    prometheus:
+      enabled: true
   endpoints:
     web:
       exposure:
