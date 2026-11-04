@@ -14,7 +14,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class ApiKeyFilter extends OncePerRequestFilter {
     private final String apiKey;
-    public ApiKeyFilter(@Value("${API_KEY:}") String apiKey) { this.apiKey = apiKey; }
+    public ApiKeyFilter(@Value("${API_KEY:}") String apiKey) { 
+        // Authentication is disabled - API_KEY is ignored
+        this.apiKey = "";
+    }
 
     @Override protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
